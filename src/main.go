@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"strconv"
 )
 
@@ -18,7 +19,47 @@ func main() {
 
 	for err == nil {
 		read.UnreadByte()
-		fmt.Println(Decode(read))
+
+		// fmt.Println(Decode(read))
+		data, _ := Decode(read)
+		Type := reflect.TypeOf(data)
+		Value := reflect.ValueOf(data)
+		fmt.Print(Type)
+		fmt.Println(Type.Key())
+		fmt.Println(Type.Elem())
+
+		for _, val := range Value.MapKeys() {
+			v := Value.MapIndex(val)
+
+			// fmt.Println(reflect.TypeOf(v.Interface()))
+			fmt.Println(val.Interface(), " -> ", reflect.ValueOf(v.Interface()).Kind())
+
+			if reflect.ValueOf(v.Interface()).Kind() == reflect.Slice {
+				for i := 0; i < reflect.ValueOf(v.Interface()).Len(); i += 1 {
+					fmt.Println(reflect.ValueOf(v.Interface()).Index(i))
+				}
+			}
+
+			if reflect.ValueOf(v.Interface()).Kind() == reflect.Map {
+				Value2 := reflect.ValueOf(v.Interface())
+				for _, val2 := range Value2.MapKeys() {
+					v2 := Value2.MapIndex(val2)
+					fmt.Println(val.Interface(), " -> ", val2.Interface(), " -> ", reflect.ValueOf(v2.Interface()).Kind())
+					if reflect.ValueOf(v2.Interface()).Kind() == reflect.Slice {
+						for i := 0; i < reflect.ValueOf(v2.Interface()).Len(); i += 1 {
+							// fmt.Println(reflect.ValueOf(v2.Interface()).Index(i))
+							fmt.Println(reflect.TypeOf(reflect.ValueOf(v2.Interface()).Index(i).Interface()))
+						}
+					}
+				}
+			}
+		}
+
+		// fmt.Println(Value.NumField())
+		// fmt.Println(typeof(reflect.ValueOf(value)))
+		// for i := 0; i < value.NumField(); i += 1 {
+
+		// }
 		_, err = read.ReadByte()
 	}
 }
@@ -98,6 +139,8 @@ func ParseDict(r *bufio.Reader) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			// fmt.Println(key.(string), " -> ")
 
 			dict[key.(string)] = value
 		}
